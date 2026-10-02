@@ -1,0 +1,8 @@
+.DS_Store
+.build/
+.swiftpm/
+.downloads/
+Vendor/*
+!Vendor/WasmKit/
+Vendor/WasmKit/.build/
+Vendor/WasmKit/.swiftpm/

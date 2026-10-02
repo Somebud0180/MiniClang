@@ -1,0 +1,41 @@
+# MiniClang
+
+Standalone Swift package for offline C99/C++11 compilation to WebAssembly and execution through WasmKit. Supports iOS 18+ and macOS 15+ with Swift 6.3+. C++ exceptions are unsupported.
+
+## Development
+
+The package includes pinned WasmKit sources and runtime test fixtures, so package resolution and runtime tests do not need the compiler downloads:
+
+```sh
+swift test
+swift build --product mini-clang
+```
+
+Download and verify the iOS compiler frameworks and WASI sysroot before embedding into an app:
+
+```sh
+swift Tools/bootstrap-offline-clang.swift
+```
+
+The bootstrap requires network access; the installed app runs offline. Archives, extracted toolchain binaries, personal Xcode settings, and build caches are ignored by Git. Third-party notices are in `Licenses/` and `Vendor/WasmKit/LICENSE`.
+
+Desktop compilation tests require a compatible desktop WASI SDK:
+
+```sh
+MINIC_WASI_SDK=/path/to/wasi-sdk MINIC_SYSROOT="$PWD/Vendor/usr" swift test
+```
+
+## Importing into an iOS app
+
+Add this repository as a local Swift package in Xcode and link the `MiniClang` product. Use `import MiniClang` in Swift. Mini C uses a sibling checkout (`../MiniClang`) to allow independent development.
+
+The Swift package supplies the compiler bridge and runtime. The dynamically loaded compiler frameworks and filesystem sysroot additionally require an app build phase:
+
+1. Define `OFFLINE_CLANG_ROOT` as the absolute package checkout path (Mini C uses `$(SRCROOT)/../MiniClang`).
+2. Run `"$OFFLINE_CLANG_ROOT/Tools/embed-offline-clang.sh"` before app signing.
+3. If build-script sandboxing is enabled, use `$(OFFLINE_CLANG_ROOT)/Vendor/inputs.xcfilelist` as an input file list, and declare the toolchain resource and Frameworks directories as outputs.
+4. Set the executable runpath to `@executable_path/Frameworks` and export `_MCCompilerEntry` and `_main` through linker flags, as Mini C does.
+
+The embedding script uses Xcode's target build directory, resource directory, framework directory, architecture, platform and signing environment variables. It embeds only the selected framework slice. Physical iPhones and Intel simulators support compilation; ARM simulators support bundled WebAssembly runtime examples only.
+
+A remote Git package URL can replace the local package reference after this repository is published. The app must still bootstrap the toolchain and point `OFFLINE_CLANG_ROOT` at that checkout for its embedding phase.
