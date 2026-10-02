@@ -63,10 +63,13 @@ for entry in entries {
     let hash = Insecure.SHA1.hash(data: blob).map { String(format: "%02x", $0) }.joined()
     guard hash == entry["sha"] as? String else { fatalError("Runtime source hash mismatch: \(path)") }
     try fm.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
-    try data.write(to: target)
+    if !fm.fileExists(atPath: target.path) { try data.write(to: target) }
 }
 try fm.copyItemReplacing(at: prototype.appendingPathComponent("WasmKit.Package.swift.template"), to: runtime.appendingPathComponent("Package.swift"))
-try revision.write(to: runtime.appendingPathComponent("UPSTREAM_REVISION"), atomically: true, encoding: .utf8)
+let revisionFile = runtime.appendingPathComponent("UPSTREAM_REVISION")
+if (try? String(contentsOf: revisionFile, encoding: .utf8)) != revision {
+    try revision.write(to: revisionFile, atomically: true, encoding: .utf8)
+}
 // Xcode's build-script sandbox requires every directory and file used by rsync.
 var inputs: [String] = []
 for name in ["usr", "clang.xcframework", "lld.xcframework", "libLLVM.xcframework", "ios_system.xcframework"] {
@@ -95,6 +98,7 @@ print("Optional host verification: install desktop wasi-sdk 14.0 and set MINIC_W
 
 extension FileManager {
     func copyItemReplacing(at source: URL, to target: URL) throws {
+        if contentsEqual(atPath: source.path, andPath: target.path) { return }
         if fileExists(atPath: target.path) { try removeItem(at: target) }
         try copyItem(at: source, to: target)
     }
