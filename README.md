@@ -1,9 +1,10 @@
 # MiniClang
-
 Standalone Swift package for offline C99/C++11 compilation to WebAssembly and execution through WasmKit. Supports iOS 18+ and macOS 15+ with Swift 6.3+. C++ exceptions are unsupported.
 
-## Development
+### AI DIsclosure
+This library was made wholly by AI (Codex). It was made for use in [Mini C](https://github.com/somebud0180/minic) as its compiler. As such this library is provided as-is and was made into a repository to neatly integrate in the development chain along with making the code visible. Thank you!
 
+## Development
 The package includes pinned WasmKit sources and runtime test fixtures, so package resolution and runtime tests do not need the compiler downloads:
 
 ```sh
@@ -26,7 +27,6 @@ MINIC_WASI_SDK=/path/to/wasi-sdk MINIC_SYSROOT="$PWD/Vendor/usr" swift test
 ```
 
 ## Importing into an iOS app
-
 Add this repository as a local Swift package in Xcode and link the `MiniClang` product. Use `import MiniClang` in Swift. Mini C uses a sibling checkout (`../MiniClang`) to allow independent development.
 
 The Swift package supplies the compiler bridge and runtime. The dynamically loaded compiler frameworks and filesystem sysroot additionally require an app build phase:
